@@ -1,11 +1,17 @@
-"""Aba: Fazer Transferência."""
+"""Aba: Fazer Transferência.
+
+Conforme o enunciado: apenas os caixas podem efetuar movimentações
+financeiras (saques, depósitos, transferências) — e somente nas contas
+da própria agência. Gerentes e admins não fazem movimentações financeiras
+diretas (cadastram/alteram dados, mas não movem dinheiro).
+"""
 import random
 
 import mysql.connector
 import streamlit as st
 
 from database import conectar_banco
-from auth import obter_contas_usuario
+from auth import obter_contas_usuario, obter_agencia_funcionario, conta_pertence_a_agencia
 
 
 def render(user):
@@ -18,8 +24,16 @@ def render(user):
         else:
             st.warning("Você não tem nenhuma conta vinculada.")
             conta_origem = None
-    else:
+    elif user['role'] == 'caixa':
+        conta_origem = st.text_input("Conta de Origem (da sua agência):", key="trans_origem_input")
+    elif user['role'] == 'admin':
+        # Admin tem acesso total e irrestrito (conforme o enunciado)
         conta_origem = st.text_input("Sua Conta (Origem):", key="trans_origem_input")
+    else:
+        # gerente e atendente não fazem movimentações financeiras
+        st.warning("Seu perfil não tem permissão para realizar movimentações financeiras.")
+        st.caption("Apenas caixas (ou o admin) podem efetuar transferências, saques e depósitos.")
+        return
 
     conta_destino = st.text_input("Conta de Destino:", key="trans_destino")
     valor = st.number_input("Valor da Transferência (R$):", min_value=0.01, key="trans_valor")
@@ -32,6 +46,13 @@ def render(user):
             if user['role'] == 'client' and int(conta_origem) not in obter_contas_usuario(user['cpf']):
                 st.error("Você só pode transferir a partir de uma conta vinculada ao seu CPF.")
                 return
+
+            # Caixa só pode movimentar contas da própria agência
+            if user['role'] == 'caixa':
+                num_ag = obter_agencia_funcionario(user['matricula'])
+                if num_ag is None or not conta_pertence_a_agencia(int(conta_origem), num_ag):
+                    st.error("Você só pode movimentar contas da sua própria agência.")
+                    return
 
             conexao = conectar_banco()
 
@@ -63,4 +84,4 @@ def render(user):
                     cursor.close()
                     conexao.close()
         else:
-            st.error("Preencha todos os campos corretamente.")
+            st.error("Preencha todos os campos corretamente.")  

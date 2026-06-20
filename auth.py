@@ -43,8 +43,11 @@ def inicializar_autenticacao(conexao):
             cursor.execute("SELECT matricula, nome_completo, senha, cargo FROM Funcionario")
             funcs = cursor.fetchall()
             for matricula, nome, senha, cargo in funcs:
-                # Gerente é admin, outros cargos são gerentes
-                role = 'admin' if cargo == 'gerente' else 'gerente'
+                # O cargo 'gerente' da tabela Funcionario já corresponde 1:1 ao
+                # role 'gerente'. 'atendente' e 'caixa' também mapeiam direto.
+                # O role 'admin' nunca é atribuído automaticamente aqui — só
+                # via promoção manual (ver promover_usuario).
+                role = cargo  # 'gerente', 'atendente' ou 'caixa'
                 cursor.execute(
                     "INSERT IGNORE INTO Usuario (username, nome, senha, role, matricula) VALUES (%s, %s, %s, %s, %s)",
                     (matricula, nome, senha, role, matricula)
@@ -70,6 +73,43 @@ def inicializar_autenticacao(conexao):
             st.error(f"Erro ao inicializar banco de dados de autenticação: {err}")
     finally:
         cursor.close()
+
+
+def obter_agencia_funcionario(matricula):
+    """Retorna o num_ag do funcionário, ou None se não encontrado."""
+    if not matricula:
+        return None
+    conexao = conectar_banco()
+    num_ag = None
+    if conexao:
+        cursor = conexao.cursor()
+        try:
+            cursor.execute("SELECT num_ag FROM Funcionario WHERE matricula = %s", (matricula,))
+            res = cursor.fetchone()
+            num_ag = res[0] if res else None
+        except mysql.connector.Error as err:
+            st.error(f"Erro ao buscar agência do funcionário: {err}")
+        finally:
+            cursor.close()
+            conexao.close()
+    return num_ag
+
+
+def conta_pertence_a_agencia(num_conta, num_ag):
+    """Verifica se a conta informada pertence à agência indicada."""
+    conexao = conectar_banco()
+    pertence = False
+    if conexao:
+        cursor = conexao.cursor()
+        try:
+            cursor.execute("SELECT 1 FROM Conta WHERE num_conta = %s AND num_ag = %s", (num_conta, num_ag))
+            pertence = cursor.fetchone() is not None
+        except mysql.connector.Error as err:
+            st.error(f"Erro ao validar agência da conta: {err}")
+        finally:
+            cursor.close()
+            conexao.close()
+    return pertence
 
 
 def obter_contas_usuario(cpf):
@@ -144,6 +184,9 @@ def promover_usuario(id_usuario, novo_cargo):
                         # Obter dados do cliente
                         # Cliente: cpf, nome_completo, rg_num, rg_org, rg_uf, birth, tipo_log, nome_log, num, comp, bairro, cep, cidade, estado
                         # Funcionario: matricula, nome_completo, senha, tipo_log, nome_log, num, comp, bairro, cidade, estado, cep, cargo, genero, birth, salario, num_ag
+                        # No Funcionario, 'admin' não existe como cargo — equivale a 'gerente'.
+                        # Demais roles (gerente, atendente, caixa) mapeiam 1:1.
+                        cargo_funcionario = 'gerente' if novo_cargo == 'admin' else novo_cargo
                         sql_func = """
                             INSERT INTO Funcionario (
                                 matricula, nome_completo, senha, tipo_logradouro, nome_logradouro, numero, complemento, bairro, cidade, estado, cep,
@@ -152,14 +195,15 @@ def promover_usuario(id_usuario, novo_cargo):
                         """
                         cursor.execute(sql_func, (
                             matricula, nome, c_data[6], c_data[7], c_data[8], c_data[9], c_data[10], c_data[12], c_data[13], c_data[11],
-                            'gerente' if novo_cargo == 'admin' else novo_cargo, c_data[5]
+                            cargo_funcionario, c_data[5]
                         ))
 
                         cursor.execute("UPDATE Usuario SET matricula = %s WHERE id = %s", (matricula, id_usuario))
                 else:
-                    # Se já tem matrícula, apenas atualizar o cargo
+                    # Se já tem matrícula, apenas atualizar o cargo (mesma regra de mapeamento)
+                    cargo_funcionario = 'gerente' if novo_cargo == 'admin' else novo_cargo
                     cursor.execute("UPDATE Funcionario SET cargo = %s WHERE matricula = %s", (
-                        'gerente' if novo_cargo in ['gerente', 'admin'] else 'caixa', matricula
+                        cargo_funcionario, matricula
                     ))
             conexao.commit()
         except mysql.connector.Error as err:

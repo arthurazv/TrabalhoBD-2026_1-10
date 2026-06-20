@@ -9,7 +9,7 @@ from config import carregar_env
 from database import conectar_banco
 from auth import inicializar_autenticacao
 from styles import CSS
-from views import login, extrato, transferencia, gerente, usuarios
+from views import login, extrato, transferencia, gerente, usuarios, extrato_atendente
 
 carregar_env()
 
@@ -54,24 +54,42 @@ else:
 
     st.write("Escolha uma opção no menu abaixo:")
 
-    # Renderizar abas dinâmicas
-    if user['role'] in ['gerente', 'admin']:
-        tab1, tab2, tab3, tab4 = st.tabs(["📊 Consultar Extrato", "💸 Fazer Transferência", "💼 Área do Gerente", "⚙️ Gerenciar Usuários"])
+    # Monta a lista de (rótulo, função_de_render) conforme o role do usuário,
+    # seguindo as regras do enunciado:
+    #   - client: extrato (próprias contas) + transferência (própria conta)
+    #   - atendente: só leitura de número/saldo das contas da própria agência
+    #   - caixa: extrato + transferência, mas restritos à própria agência
+    #   - gerente: área do gerente (contas que gerencia) + gerenciar usuários
+    #     (não movimenta dinheiro)
+    #   - admin: acesso total e irrestrito a todas as telas
+    abas = []
+
+    if user['role'] == 'client':
+        abas.append(("📊 Consultar Extrato", lambda: extrato.render(user)))
+        abas.append(("💸 Fazer Transferência", lambda: transferencia.render(user)))
+
+    elif user['role'] == 'atendente':
+        abas.append(("📋 Consultar Contas", lambda: extrato_atendente.render(user)))
+
+    elif user['role'] == 'caixa':
+        abas.append(("📊 Consultar Extrato", lambda: extrato.render(user)))
+        abas.append(("💸 Fazer Transferência", lambda: transferencia.render(user)))
+
+    elif user['role'] == 'gerente':
+        abas.append(("💼 Área do Gerente", lambda: gerente.render()))
+        abas.append(("⚙️ Gerenciar Usuários", lambda: usuarios.render(user)))
+
+    elif user['role'] == 'admin':
+        # Admin tem acesso total e irrestrito (conforme o enunciado)
+        abas.append(("📊 Consultar Extrato", lambda: extrato.render(user)))
+        abas.append(("💸 Fazer Transferência", lambda: transferencia.render(user)))
+        abas.append(("💼 Área do Gerente", lambda: gerente.render()))
+        abas.append(("⚙️ Gerenciar Usuários", lambda: usuarios.render(user)))
+
+    if abas:
+        tabs = st.tabs([rotulo for rotulo, _ in abas])
+        for tab, (_, render_fn) in zip(tabs, abas):
+            with tab:
+                render_fn()
     else:
-        tab1, tab2 = st.tabs(["📊 Consultar Extrato", "💸 Fazer Transferência"])
-        tab3 = None
-        tab4 = None
-
-    with tab1:
-        extrato.render(user)
-
-    with tab2:
-        transferencia.render(user)
-
-    if tab3 is not None:
-        with tab3:
-            gerente.render()
-
-    if tab4 is not None:
-        with tab4:
-            usuarios.render(user)
+        st.info("Não há telas disponíveis para o seu perfil de acesso.")

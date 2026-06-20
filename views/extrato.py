@@ -1,9 +1,14 @@
-"""Aba: Consultar Extrato."""
+"""Aba: Consultar Extrato.
+
+client: só as próprias contas.
+caixa: qualquer conta, mas restrita à própria agência.
+gerente/admin: irrestrito (mesma regra já existente).
+"""
 import mysql.connector
 import streamlit as st
 
 from database import conectar_banco
-from auth import obter_contas_usuario
+from auth import obter_contas_usuario, obter_agencia_funcionario, conta_pertence_a_agencia
 from utils import formatar_datas_dataframe
 
 
@@ -18,11 +23,20 @@ def render(user):
         else:
             st.warning("Você não tem nenhuma conta vinculada.")
             conta = None
+    elif user['role'] == 'caixa':
+        conta = st.text_input("Digite o número da conta (da sua agência):", key="extrato_conta_input")
     else:
         conta = st.text_input("Digite o número da conta:", key="extrato_conta_input")
 
     if st.button("Buscar Extrato", key="btn_extrato"):
         if conta:
+            # Caixa só pode consultar contas da própria agência
+            if user['role'] == 'caixa':
+                num_ag = obter_agencia_funcionario(user['matricula'])
+                if num_ag is None or not conta_pertence_a_agencia(int(conta), num_ag):
+                    st.error("Você só pode consultar contas da sua própria agência.")
+                    return
+
             conexao = conectar_banco()
             if conexao:
                 cursor = conexao.cursor(dictionary=True)
