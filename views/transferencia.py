@@ -26,6 +26,13 @@ def render(user):
 
     if st.button("Confirmar Transferência", key="btn_transferencia"):
         if conta_origem and conta_destino and valor > 0:
+            # Mesmo com o selectbox restringindo a UI, revalida no backend que a
+            # conta de origem realmente pertence ao cliente logado. Isso protege
+            # contra manipulação do request (DevTools, bugs, chamadas diretas).
+            if user['role'] == 'client' and int(conta_origem) not in obter_contas_usuario(user['cpf']):
+                st.error("Você só pode transferir a partir de uma conta vinculada ao seu CPF.")
+                return
+
             conexao = conectar_banco()
 
             if conexao:
@@ -35,13 +42,19 @@ def render(user):
                     c_destino = int(conta_destino)
                     v_transf = float(valor)
 
-                    num_t_origem = random.randint(10000, 99999)
-                    num_t_destino = random.randint(10000, 99999)
+                    if c_origem == c_destino:
+                        st.error("A conta de origem e destino não podem ser a mesma.")
+                    else:
+                        num_t_origem = random.randint(10000, 99999)
+                        num_t_destino = random.randint(10000, 99999)
 
-                    cursor.callproc('sp_executar_transferencia', [c_origem, c_destino, v_transf, num_t_origem, num_t_destino])
-                    conexao.commit()
+                        cursor.callproc(
+                            'sp_executar_transferencia',
+                            [user['username'], c_origem, c_destino, v_transf, num_t_origem, num_t_destino]
+                        )
+                        conexao.commit()
 
-                    st.success(f"✅ Transferência de R$ {valor:.2f} realizada com sucesso!")
+                        st.success(f"✅ Transferência de R$ {valor:.2f} realizada com sucesso!")
                 except mysql.connector.Error as erro:
                     st.error(f"❌ Transferência Negada: {erro.msg}")
                 except ValueError:
