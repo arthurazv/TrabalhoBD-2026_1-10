@@ -133,3 +133,20 @@ INSERT INTO Titularidade_Conta (num_conta, cpf_cliente, tipo_titular) VALUES
 
 INSERT INTO Transacao (num_transacao, num_conta, tipo, data_hora, valor) VALUES
 (1, 50501, 'depósito', '2026-06-09 10:30:00', 1200.50);
+
+CREATE TABLE Usuario (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    nome VARCHAR(150) NOT NULL,
+    senha VARCHAR(255) NOT NULL,
+    role ENUM('client', 'gerente', 'admin') NOT NULL DEFAULT 'client',
+    cpf CHAR(11) UNIQUE NULL,
+    matricula VARCHAR(20) UNIQUE NULL,
+    FOREIGN KEY (cpf) REFERENCES Cliente(cpf) ON DELETE CASCADE,
+    FOREIGN KEY (matricula) REFERENCES Funcionario(matricula) ON DELETE CASCADE
+);
+
+INSERT INTO Usuario (username, nome, senha, role, cpf, matricula) VALUES
+('MAT1001', 'Fernando Alves', 'a1b2c3d4e5f6', 'admin', NULL, 'MAT1001'),
+('MAT1002', 'Lara Mendes', 'f6e5d4c3b2a1', 'gerente', NULL, 'MAT1002'),
+('01234567890', 'Camila Rocha', 'hashsenha123', 'client', '01234567890', NULL);
