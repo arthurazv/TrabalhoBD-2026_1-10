@@ -50,8 +50,10 @@ CSS = """
     }
 
     .stTabs [data-baseweb="tab"] {
+        padding-left: 20px !important;
+        padding-right: 20px !important;
         height: 40px;
-        white-space: pre-wrap;
+        white-space: nowrap !important;
         background-color: transparent;
         border-radius: 8px;
         color: #8A8AAB;
@@ -68,6 +70,20 @@ CSS = """
     .stTabs [aria-selected="true"] {
         background-color: #FF4B4B !important;
         color: white !important;
+    }
+
+    /* Customizar botões do Streamlit (aumentar espaçamento e hover premium) */
+    div.stButton > button {
+        padding: 10px 28px !important; /* Aumenta o espaço nas laterais e acima/abaixo */
+        min-height: 42px !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        transition: all 0.2s ease-in-out !important;
+    }
+
+    div.stButton > button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(255, 75, 75, 0.15);
     }
     </style>
 """

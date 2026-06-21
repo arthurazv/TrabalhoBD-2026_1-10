@@ -109,9 +109,11 @@ INSERT INTO Agencia (nome_ag, cidade, sal_total) VALUES
 ('Agência Central', 'Sobral', 0.00),
 ('Agência Boulevard', 'Fortaleza', 0.00);
 
+-- Modificado em 2026-06-20: Hashing de senhas na inserção e adição do funcionário atendente MAT1003
 INSERT INTO Funcionario (matricula, nome_completo, senha, tipo_logradouro, nome_logradouro, numero, complemento, bairro, cidade, estado, cep, cargo, genero, data_nascimento, salario, num_ag) VALUES
-('MAT1001', 'Fernando Alves', 'a1b2c3d4e5f6', 'Rua', 'Menino Deus', '15', 'Apto 101', 'Centro', 'Sobral', 'CE', '62010000', 'gerente', 'masculino', '1980-05-20', 6500.00, 1),
-('MAT1002', 'Lara Mendes', 'f6e5d4c3b2a1', 'Avenida', 'Dom José', '1020', '', 'Derby', 'Sobral', 'CE', '62042000', 'caixa', 'feminino', '1995-10-12', 3200.00, 1);
+('MAT1001', 'Fernando Alves', 'bde81e9384b7848e57951ec32c7344459233235bfa519d7396ae3406014a06f4', 'Rua', 'Menino Deus', '15', 'Apto 101', 'Centro', 'Sobral', 'CE', '62010000', 'gerente', 'masculino', '1980-05-20', 6500.00, 1),
+('MAT1002', 'Lara Mendes', '69413a7f7bc076463fc21cf44d79dda95e1c0180401143893985eabb08735074', 'Avenida', 'Dom José', '1020', '', 'Derby', 'Sobral', 'CE', '62042000', 'caixa', 'feminino', '1995-10-12', 3200.00, 1),
+('MAT1003', 'Carlos Souza', '3c0d93689d4786f99c82252a81c1abccf8b19041fd78c147ce7c1becb7b522e3', 'Rua', 'Barão do Rio Branco', '120', '', 'Centro', 'Sobral', 'CE', '62010000', 'atendente', 'masculino', '1990-04-15', 3000.00, 1);
 
 INSERT INTO Dependente (nome_completo, matricula_func, data_nascimento, parentesco, idade) VALUES
 ('Lucas Alves', 'MAT1001', '2010-03-15', 'filho(a)', 16);
@@ -125,8 +127,9 @@ INSERT INTO Telefone_Cliente (cpf_cliente, telefone, descricao) VALUES
 INSERT INTO Email_Cliente (cpf_cliente, email, descricao) VALUES
 ('01234567890', 'camila.rocha@email.com', 'particular');
 
+-- Modificado em 2026-06-20: Hashing de senha da conta
 INSERT INTO Conta (num_conta, saldo, senha, tipo_conta, taxa_juros, limite_credito, data_aniversario_contrato, num_ag, matricula_gerente) VALUES
-(50501, 1200.50, 'hashsenha123', 'conta-corrente', NULL, NULL, '2020-01-15', 1, 'MAT1001');
+(50501, 1200.50, '917249bf99d735aae9d47d0b2433fb606b2954a76045ceeb26f75c3d393a0e40', 'conta-corrente', NULL, NULL, '2020-01-15', 1, 'MAT1001');
 
 INSERT INTO Titularidade_Conta (num_conta, cpf_cliente, tipo_titular) VALUES
 (50501, '01234567890', '1º titular');
@@ -134,19 +137,23 @@ INSERT INTO Titularidade_Conta (num_conta, cpf_cliente, tipo_titular) VALUES
 INSERT INTO Transacao (num_transacao, num_conta, tipo, data_hora, valor) VALUES
 (1, 50501, 'depósito', '2026-06-09 10:30:00', 1200.50);
 
+-- Modificado em 2026-06-20: ENUM atualizado com 'atendente' e 'caixa'
 CREATE TABLE Usuario (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
     nome VARCHAR(150) NOT NULL,
     senha VARCHAR(255) NOT NULL,
-    role ENUM('client', 'gerente', 'admin') NOT NULL DEFAULT 'client',
+    role ENUM('client', 'atendente', 'caixa', 'gerente', 'admin') NOT NULL DEFAULT 'client',
     cpf CHAR(11) UNIQUE NULL,
     matricula VARCHAR(20) UNIQUE NULL,
     FOREIGN KEY (cpf) REFERENCES Cliente(cpf) ON DELETE CASCADE,
     FOREIGN KEY (matricula) REFERENCES Funcionario(matricula) ON DELETE CASCADE
 );
 
+-- Modificado em 2026-06-20: Adicionados os novos papéis e o usuário Admin/Root fixo hasheado
 INSERT INTO Usuario (username, nome, senha, role, cpf, matricula) VALUES
-('MAT1001', 'Fernando Alves', 'a1b2c3d4e5f6', 'admin', NULL, 'MAT1001'),
-('MAT1002', 'Lara Mendes', 'f6e5d4c3b2a1', 'gerente', NULL, 'MAT1002'),
-('01234567890', 'Camila Rocha', 'hashsenha123', 'client', '01234567890', NULL);
+('Admin', 'Administrador DBA', '44cb005ee2e65d9cc817b0a083579369fb6c24a4be728cb43fd9d4c3ca7f4c2e', 'admin', NULL, NULL),
+('MAT1001', 'Fernando Alves', 'bde81e9384b7848e57951ec32c7344459233235bfa519d7396ae3406014a06f4', 'admin', NULL, 'MAT1001'),
+('MAT1002', 'Lara Mendes', '69413a7f7bc076463fc21cf44d79dda95e1c0180401143893985eabb08735074', 'caixa', NULL, 'MAT1002'),
+('MAT1003', 'Carlos Souza', '3c0d93689d4786f99c82252a81c1abccf8b19041fd78c147ce7c1becb7b522e3', 'atendente', NULL, 'MAT1003'),
+('01234567890', 'Camila Rocha', '917249bf99d735aae9d47d0b2433fb606b2954a76045ceeb26f75c3d393a0e40', 'client', '01234567890', NULL);

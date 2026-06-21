@@ -60,7 +60,12 @@ BEGIN
     END IF;
 END$$
 
+-- Modificado em 2026-06-20: Adicionada assinatura de 6 parâmetros e validação de titularidade/permissão diretamente no banco de dados.
+DROP PROCEDURE IF EXISTS sp_executar_transferencia;
+
+DELIMITER $$
 CREATE PROCEDURE sp_executar_transferencia(
+    IN p_username_solicitante VARCHAR(50),
     IN p_conta_origem INT,
     IN p_conta_destino INT,
     IN p_valor REAL,
@@ -68,11 +73,40 @@ CREATE PROCEDURE sp_executar_transferencia(
     IN p_num_trans_destino INT
 )
 BEGIN
+    DECLARE v_role VARCHAR(20);
+    DECLARE v_cpf CHAR(11);
+    DECLARE v_eh_titular INT DEFAULT 0;
+
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Falha na transferência. Operação abortada.';
+        RESIGNAL;
     END;
+
+    -- 1. Identificar quem está solicitando e o seu papel
+    SELECT role, cpf INTO v_role, v_cpf
+    FROM Usuario
+    WHERE username = p_username_solicitante;
+
+    IF v_role IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Usuário solicitante não encontrado.';
+    END IF;
+
+    -- 2. Restringir cliente a movimentar apenas suas próprias contas de titularidade
+    IF v_role = 'client' THEN
+        SELECT COUNT(*) INTO v_eh_titular
+        FROM Titularidade_Conta
+        WHERE num_conta = p_conta_origem AND cpf_cliente = v_cpf;
+
+        IF v_eh_titular = 0 THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Você não tem permissão para movimentar essa conta de origem.';
+        END IF;
+    END IF;
+
+    -- 3. Impedir transferências para a própria conta de origem
+    IF p_conta_origem = p_conta_destino THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Conta de origem e destino não podem ser iguais.';
+    END IF;
 
     START TRANSACTION;
     

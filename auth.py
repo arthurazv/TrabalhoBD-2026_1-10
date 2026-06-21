@@ -21,6 +21,15 @@ def inicializar_autenticacao(conexao):
     try:
         cursor.execute("SELECT 1 FROM Usuario LIMIT 1")
         cursor.fetchall()
+        
+        # Garantir que o administrador fixo existe mesmo se a tabela já foi criada anteriormente
+        cursor.execute("SELECT 1 FROM Usuario WHERE username = 'Admin'")
+        if not cursor.fetchone():
+            cursor.execute(
+                "INSERT INTO Usuario (username, nome, senha, role) VALUES (%s, %s, %s, %s)",
+                ('Admin', 'Administrador DBA', hash_senha('Root'), 'admin')
+            )
+            conexao.commit()
     except mysql.connector.Error:
         # Tabela não existe, criar
         try:
@@ -30,7 +39,7 @@ def inicializar_autenticacao(conexao):
                     username VARCHAR(50) UNIQUE NOT NULL,
                     nome VARCHAR(150) NOT NULL,
                     senha VARCHAR(255) NOT NULL,
-                    role ENUM('client', 'gerente', 'admin') NOT NULL DEFAULT 'client',
+                    role ENUM('client', 'atendente', 'caixa', 'gerente', 'admin') NOT NULL DEFAULT 'client',
                     cpf CHAR(11) UNIQUE NULL,
                     matricula VARCHAR(20) UNIQUE NULL,
                     FOREIGN KEY (cpf) REFERENCES Cliente(cpf) ON DELETE CASCADE,
@@ -67,6 +76,12 @@ def inicializar_autenticacao(conexao):
                     "INSERT IGNORE INTO Usuario (username, nome, senha, role, cpf) VALUES (%s, %s, %s, %s, %s)",
                     (cpf, nome, senha, 'client', cpf)
                 )
+
+            # Inserir o administrador fixo no banco recém-criado
+            cursor.execute(
+                "INSERT IGNORE INTO Usuario (username, nome, senha, role) VALUES (%s, %s, %s, %s)",
+                ('Admin', 'Administrador DBA', hash_senha('Root'), 'admin')
+            )
 
             conexao.commit()
         except mysql.connector.Error as err:
@@ -153,7 +168,7 @@ def autenticar(username, senha):
 
     db_pass = usuario['senha']
     hashed_input = hash_senha(senha)
-    if db_pass == senha or db_pass == hashed_input:
+    if db_pass == hashed_input:
         return usuario
     return None
 

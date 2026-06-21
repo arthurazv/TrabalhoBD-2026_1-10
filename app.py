@@ -9,7 +9,7 @@ from config import carregar_env
 from database import conectar_banco
 from auth import inicializar_autenticacao
 from styles import CSS
-from views import login, extrato, transferencia, gerente, usuarios, extrato_atendente
+from views import login, extrato, transferencia, gerente, usuarios, extrato_atendente, operacoes
 
 carregar_env()
 
@@ -58,8 +58,8 @@ else:
     # seguindo as regras do enunciado:
     #   - client: extrato (próprias contas) + transferência (própria conta)
     #   - atendente: só leitura de número/saldo das contas da própria agência
-    #   - caixa: extrato + transferência, mas restritos à própria agência
-    #   - gerente: área do gerente (contas que gerencia) + gerenciar usuários
+    #   - caixa: extrato + transferência + saque/depósito, restritos à própria agência
+    #   - gerente: área do gerente (contas que gerencia, cadastro de funcionários/contas) + gerenciar usuários
     #     (não movimenta dinheiro)
     #   - admin: acesso total e irrestrito a todas as telas
     abas = []
@@ -74,16 +74,18 @@ else:
     elif user['role'] == 'caixa':
         abas.append(("📊 Consultar Extrato", lambda: extrato.render(user)))
         abas.append(("💸 Fazer Transferência", lambda: transferencia.render(user)))
+        abas.append(("💵 Saque / Depósito", lambda: operacoes.render(user)))
 
     elif user['role'] == 'gerente':
-        abas.append(("💼 Área do Gerente", lambda: gerente.render()))
+        abas.append(("💼 Área do Gerente", lambda: gerente.render(user)))
         abas.append(("⚙️ Gerenciar Usuários", lambda: usuarios.render(user)))
 
     elif user['role'] == 'admin':
         # Admin tem acesso total e irrestrito (conforme o enunciado)
         abas.append(("📊 Consultar Extrato", lambda: extrato.render(user)))
         abas.append(("💸 Fazer Transferência", lambda: transferencia.render(user)))
-        abas.append(("💼 Área do Gerente", lambda: gerente.render()))
+        abas.append(("💵 Saque / Depósito", lambda: operacoes.render(user)))
+        abas.append(("💼 Área do Gerente", lambda: gerente.render(user)))
         abas.append(("⚙️ Gerenciar Usuários", lambda: usuarios.render(user)))
 
     if abas:
