@@ -34,7 +34,7 @@ def render(user):
             contas = cursor.fetchall()
 
             if contas:
-                st.dataframe(contas, use_container_width=True)
+                st.dataframe(contas, width="stretch")
             else:
                 st.info("Nenhuma conta encontrada nesta agência.")
         except mysql.connector.Error as err:

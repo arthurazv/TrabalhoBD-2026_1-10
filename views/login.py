@@ -20,7 +20,7 @@ def render():
         username = st.text_input("Usuário (CPF ou Matrícula ou Username)", key="login_user")
         senha = st.text_input("Senha", type="password", key="login_pass")
 
-        if st.button("Acessar Conta", use_container_width=True):
+        if st.button("Acessar Conta", width="stretch"):
             if not username or not senha:
                 st.error("Por favor, preencha todos os campos.")
             else:
@@ -71,7 +71,7 @@ def render():
             cidade = st.text_input("Cidade", value="Sobral", key="cad_city")
             estado = st.text_input("Estado (UF)", value="CE", max_chars=2, key="cad_state")
 
-        if st.button("Criar Minha Conta", use_container_width=True):
+        if st.button("Criar Minha Conta", width="stretch"):
             if not nome or not cad_user or not cpf or not cad_pass or not data_nasc:
                 st.error("Por favor, preencha todos os campos obrigatórios (*).")
             elif len(cpf) != 11 or not cpf.isdigit():

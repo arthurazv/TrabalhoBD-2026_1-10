@@ -51,7 +51,7 @@ def render(user):
 
                     if resultados:
                         resultados = formatar_datas_dataframe(resultados)
-                        st.dataframe(resultados, use_container_width=True)
+                        st.dataframe(resultados, width="stretch")
                     else:
                         st.info("Nenhuma conta encontrada.")
                 except mysql.connector.Error as err:

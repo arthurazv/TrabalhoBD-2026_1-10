@@ -37,13 +37,13 @@ def render(user):
                     with col3:
                         # Apenas clientes podem ser promovidos a gerentes
                         if u['role'] == 'client':
-                            if st.button("Promover a Gerente", key=f"btn_prom_ger_{u['id']}", use_container_width=True):
+                            if st.button("Promover a Gerente", key=f"btn_prom_ger_{u['id']}", width="stretch"):
                                 promover_usuario(u['id'], 'gerente')
                                 st.success(f"Usuário {u['nome']} promovido para Gerente!")
                                 st.rerun()
                         # Gerentes podem ser promovidos a admins por admins
                         elif u['role'] == 'gerente' and user['role'] == 'admin':
-                            if st.button("Promover a Admin", key=f"btn_prom_adm_{u['id']}", use_container_width=True):
+                            if st.button("Promover a Admin", key=f"btn_prom_adm_{u['id']}", width="stretch"):
                                 promover_usuario(u['id'], 'admin')
                                 st.success(f"Usuário {u['nome']} promovido para Admin!")
                                 st.rerun()

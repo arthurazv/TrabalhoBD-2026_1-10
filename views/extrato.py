@@ -47,7 +47,7 @@ def render(user):
                     if resultados:
                         resultados = formatar_datas_dataframe(resultados)
                         st.success(f"Extrato da conta {conta} carregado!")
-                        st.dataframe(resultados, use_container_width=True)
+                        st.dataframe(resultados, width="stretch")
                     else:
                         st.warning("Nenhuma transação encontrada para esta conta.")
                 except mysql.connector.Error as err:
