@@ -270,7 +270,9 @@ def cadastrar_cliente(dados):
         if dados.get("email"):
             cursor.execute("INSERT INTO Email_Cliente (cpf_cliente, email, descricao) VALUES (%s, %s, 'pessoal')", (cpf, dados["email"]))
         if dados.get("telefone"):
-            cursor.execute("INSERT INTO Telefone_Cliente (cpf_cliente, telefone, descricao) VALUES (%s, %s, 'celular')", (cpf, dados["telefone"]))
+            import re
+            tel_limpo = re.sub(r"\D", "", dados["telefone"])[:11]
+            cursor.execute("INSERT INTO Telefone_Cliente (cpf_cliente, telefone, descricao) VALUES (%s, %s, 'celular')", (cpf, tel_limpo))
 
         # 3. Conta Bancária Padrão (saldo inicial = 1000.00)
         cursor.execute("SELECT MAX(num_conta) FROM Conta")

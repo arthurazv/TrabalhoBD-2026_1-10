@@ -226,7 +226,9 @@ def render(user):
                             if dados_novo_cliente["email"]:
                                 cursor.execute("INSERT INTO Email_Cliente (cpf_cliente, email, descricao) VALUES (%s, %s, 'pessoal')", (dados_novo_cliente["cpf"], dados_novo_cliente["email"]))
                             if dados_novo_cliente["telefone"]:
-                                cursor.execute("INSERT INTO Telefone_Cliente (cpf_cliente, telefone, descricao) VALUES (%s, %s, 'celular')", (dados_novo_cliente["cpf"], dados_novo_cliente["telefone"]))
+                                import re
+                                tel_limpo = re.sub(r"\D", "", dados_novo_cliente["telefone"])[:11]
+                                cursor.execute("INSERT INTO Telefone_Cliente (cpf_cliente, telefone, descricao) VALUES (%s, %s, 'celular')", (dados_novo_cliente["cpf"], tel_limpo))
 
                             # Inserir Usuario
                             cursor.execute(
@@ -479,7 +481,9 @@ def render(user):
                             if e_email:
                                 cursor.execute("INSERT INTO Email_Cliente (cpf_cliente, email, descricao) VALUES (%s, %s, 'pessoal') ON DUPLICATE KEY UPDATE email = VALUES(email)", (cl_detalhes['cpf'], e_email))
                             if e_telefone:
-                                cursor.execute("INSERT INTO Telefone_Cliente (cpf_cliente, telefone, descricao) VALUES (%s, %s, 'celular') ON DUPLICATE KEY UPDATE telefone = VALUES(telefone)", (cl_detalhes['cpf'], e_telefone))
+                                import re
+                                tel_limpo = re.sub(r"\D", "", e_telefone)[:11]
+                                cursor.execute("INSERT INTO Telefone_Cliente (cpf_cliente, telefone, descricao) VALUES (%s, %s, 'celular') ON DUPLICATE KEY UPDATE telefone = VALUES(telefone)", (cl_detalhes['cpf'], tel_limpo))
 
                             # 3. Atualizar Conta
                             if e_senha_conta:
