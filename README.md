@@ -49,20 +49,35 @@ O sistema implementa três níveis hierárquicos de acesso:
 *   `requirements.txt`: Dependências Python necessárias para rodar o projeto.
 *   `docker-compose.yml` e `Dockerfile`: Arquivos para orquestração do ambiente de desenvolvimento.
 
----
-
 ## 🚀 Como Executar o Projeto Localmente
 
-Embora o sistema operacional sugerido seja o Windows 10+, a aplicação foi containerizada para rodar de forma isolada em qualquer ambiente de desenvolvimento usando o Docker.
+### Pré-requisitos
+Para executar este sistema em sua máquina local, você precisa ter instalado:
+*   [Docker](https://www.docker.com/)
+*   [Docker Compose](https://docs.docker.com/compose/)
 
 ### Passo 1: Iniciar os Containers (Banco + Frontend)
-Na raiz do projeto, suba a infraestrutura utilizando o Docker Compose. Isso iniciará o banco de dados MySQL e a aplicação Streamlit conectada a ele.
+Na pasta raiz do projeto, execute o comando abaixo no terminal para construir a imagem do Streamlit e subir a infraestrutura completa do MySQL com tabelas, triggers e carga inicial populada:
 ```bash
 docker compose up -d --build
 ```
 
 ### Passo 2: Acessar a Aplicação
-Após os containers iniciarem com sucesso, abra o seu navegador e acesse a porta exposta pelo Streamlit:
+Após os containers inicializarem com sucesso, abra o seu navegador e acesse a aplicação em:
+👉 **[http://localhost:8501](http://localhost:8501)**
 
-http://localhost:8501
-(Nota: Caso deseje rodar a aplicação nativamente sem o Docker, certifique-se de ter o Python 3.11+ instalado, crie um ambiente virtual, instale as dependências com pip install -r requirements.txt e execute streamlit run app.py).
+*(Nota: Caso deseje rodar a aplicação nativamente sem o Docker, certifique-se de ter o Python 3.11+ instalado, configure as variáveis de ambiente em um arquivo `.env` baseado no `env.example`, crie um ambiente virtual, instale as dependências com `pip install -r requirements.txt` e execute `streamlit run app.py`).*
+
+---
+
+## 🔑 Credenciais Padrão para Teste
+
+Para facilitar a validação de todas as regras de negócio e níveis de acesso exigidos no enunciado, utilize as credenciais padrão já populadas no banco:
+
+| Nível de Acesso | Tipo de Login / Username | Usuário (Login) | Senha |
+| :--- | :--- | :--- | :--- |
+| **Administrador / DBA** | Username | `Admin` | `Root` |
+| **Gerente** | Matrícula | `MAT1001` | `a1b2c3d4e5f6` |
+| **Caixa** | Matrícula | `MAT1002` | `f6e5d4c3b2a1` |
+| **Atendente** | Matrícula | `MAT1003` | `c1b2a3d4e5f6` |
+| **Cliente (Camila Rocha)** | CPF | `01234567890` | `hashsenha123` |
