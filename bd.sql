@@ -90,6 +90,7 @@ CREATE TABLE Titularidade_Conta (
     cpf_cliente CHAR(11) NOT NULL,
     tipo_titular ENUM('1º titular', '2º titular') NOT NULL,
     PRIMARY KEY (num_conta, cpf_cliente),
+    UNIQUE (num_conta, tipo_titular),
     FOREIGN KEY (num_conta) REFERENCES Conta(num_conta),
     FOREIGN KEY (cpf_cliente) REFERENCES Cliente(cpf)
 );

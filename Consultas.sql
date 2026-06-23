@@ -60,6 +60,24 @@ BEGIN
     END IF;
 END$$
 
+CREATE TRIGGER tg_valida_limite_contas_agencia BEFORE INSERT ON Titularidade_Conta
+FOR EACH ROW
+BEGIN
+    DECLARE v_num_ag INT;
+    DECLARE v_contas_na_agencia INT;
+    
+    SELECT num_ag INTO v_num_ag FROM Conta WHERE num_conta = NEW.num_conta;
+    
+    SELECT COUNT(*) INTO v_contas_na_agencia
+    FROM Titularidade_Conta tc
+    JOIN Conta c ON tc.num_conta = c.num_conta
+    WHERE tc.cpf_cliente = NEW.cpf_cliente AND c.num_ag = v_num_ag;
+    
+    IF v_contas_na_agencia >= 1 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Um cliente pode possuir no máximo uma conta por agência.';
+    END IF;
+END$$
+
 -- Modificado em 2026-06-20: Adicionada assinatura de 6 parâmetros e validação de titularidade/permissão diretamente no banco de dados.
 DROP PROCEDURE IF EXISTS sp_executar_transferencia;
 
@@ -206,10 +224,36 @@ JOIN Conta c ON t.num_conta = c.num_conta
 WHERE tc.cpf_cliente = @busca_cpf AND c.tipo_conta = 'conta-corrente' AND t.data_hora >= NOW() - INTERVAL 7 DAY
 GROUP BY t.num_conta ORDER BY total DESC;
 
+SELECT t.num_conta, COUNT(t.id_transacao) AS total 
+FROM Transacao t
+JOIN Titularidade_Conta tc ON t.num_conta = tc.num_conta
+JOIN Conta c ON t.num_conta = c.num_conta
+WHERE tc.cpf_cliente = @busca_cpf AND c.tipo_conta = 'conta-corrente' AND t.data_hora >= NOW() - INTERVAL 30 DAY
+GROUP BY t.num_conta ORDER BY total DESC;
+
+SELECT t.num_conta, COUNT(t.id_transacao) AS total 
+FROM Transacao t
+JOIN Titularidade_Conta tc ON t.num_conta = tc.num_conta
+JOIN Conta c ON t.num_conta = c.num_conta
+WHERE tc.cpf_cliente = @busca_cpf AND c.tipo_conta = 'conta-corrente' AND t.data_hora >= NOW() - INTERVAL 365 DAY
+GROUP BY t.num_conta ORDER BY total DESC;
+
 SELECT t.num_conta, SUM(t.valor) AS volume 
 FROM Transacao t
 JOIN Titularidade_Conta tc ON t.num_conta = tc.num_conta
 WHERE tc.cpf_cliente = @busca_cpf AND t.data_hora >= NOW() - INTERVAL 7 DAY
+GROUP BY t.num_conta ORDER BY volume DESC;
+
+SELECT t.num_conta, SUM(t.valor) AS volume 
+FROM Transacao t
+JOIN Titularidade_Conta tc ON t.num_conta = tc.num_conta
+WHERE tc.cpf_cliente = @busca_cpf AND t.data_hora >= NOW() - INTERVAL 30 DAY
+GROUP BY t.num_conta ORDER BY volume DESC;
+
+SELECT t.num_conta, SUM(t.valor) AS volume 
+FROM Transacao t
+JOIN Titularidade_Conta tc ON t.num_conta = tc.num_conta
+WHERE tc.cpf_cliente = @busca_cpf AND t.data_hora >= NOW() - INTERVAL 365 DAY
 GROUP BY t.num_conta ORDER BY volume DESC;
 
 SELECT nome_completo, tipo_logradouro, nome_logradouro, numero, bairro, TIMESTAMPDIFF(YEAR, data_nascimento, CURDATE()) AS idade
