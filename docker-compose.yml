@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  db_nullbank:
+    image: mysql:5.7
+    container_name: db_nullbank
+    environment:
+      MYSQL_ROOT_PASSWORD: Root
+      MYSQL_DATABASE: Equipe567258
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./bd.sql:/docker-entrypoint-initdb.d/1_bd.sql
+      - ./Consultas.sql:/docker-entrypoint-initdb.d/2_Consultas.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pRoot"]
+      timeout: 10s
+      retries: 5
+      interval: 10s
+
+  nullbank_frontend:
+    build: .
+    container_name: nullbank_frontend
+    environment:
+      - DB_HOST=db_nullbank
+      - DB_USER=root
+      - DB_PASSWORD=Root
+      - DB_NAME=Equipe567258
+      - DB_PORT=3306
+    ports:
+      - "8501:8501"
+    depends_on:
+      db_nullbank:
+        condition: service_healthy
+
+volumes:
+  db_data:
