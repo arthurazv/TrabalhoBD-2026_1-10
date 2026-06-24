@@ -57,16 +57,26 @@ Para executar este sistema em sua máquina local, você precisa ter instalado:
 *   [Docker Compose](https://docs.docker.com/compose/)
 
 ### Passo 1: Iniciar os Containers (Banco + Frontend)
-Na pasta raiz do projeto, execute o comando abaixo no terminal para construir a imagem do Streamlit e subir a infraestrutura completa do MySQL com tabelas, triggers e carga inicial populada:
+Na pasta raiz do projeto, execute o comando abaixo no terminal para construir a imagem do Streamlit e subir o banco de dados MySQL e o frontend:
 ```bash
 docker compose up -d --build
 ```
 
-### Passo 2: Acessar a Aplicação
-Após os containers inicializarem com sucesso, abra o seu navegador e acesse a aplicação em:
+### Passo 2: Inicializar o Banco de Dados (SQL)
+Após os containers estarem rodando, é necessário criar a estrutura e os dados do banco de dados executando as queries SQL. 
+
+1. Conecte-se ao servidor MySQL local (`localhost:3306`) usando uma ferramenta cliente (como o **MySQL Workbench** ou **DBeaver**) com as seguintes credenciais:
+   *   **Usuário:** `root`
+   *   **Senha:** `Root`
+2. Execute o conteúdo do arquivo **`bd.sql`** para criar as tabelas e povoar os dados iniciais do NullBank.
+3. Execute o conteúdo do arquivo **`Consultas.sql`** para registrar os Triggers, Views, a Procedure de Transferência e carregar as consultas padrão.
+
+### Passo 3: Acessar a Aplicação
+Com o banco populado e configurado, acesse o frontend da aplicação em seu navegador através do link:
 👉 **[http://localhost:8501](http://localhost:8501)**
 
 *(Nota: Caso deseje rodar a aplicação nativamente sem o Docker, certifique-se de ter o Python 3.11+ instalado, configure as variáveis de ambiente em um arquivo `.env` baseado no `env.example`, crie um ambiente virtual, instale as dependências com `pip install -r requirements.txt` e execute `streamlit run app.py`).*
+
 
 ---
 
