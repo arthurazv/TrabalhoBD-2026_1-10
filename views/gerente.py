@@ -365,6 +365,7 @@ def render(user):
                     conexao.close()
 
             if c_detalhes and cl_detalhes:
+                e_suffix = f"_{conta_edit_selecionada['num_conta']}"
                 st.markdown("---")
                 st.markdown("#### 💳 Alterar Dados da Conta")
                 col_e1, col_e2 = st.columns(2)
@@ -373,10 +374,10 @@ def render(user):
                         "Tipo de Conta:",
                         ["conta-corrente", "poupança", "conta especial"],
                         index=["conta-corrente", "poupança", "conta especial"].index(c_detalhes['tipo_conta']),
-                        key="edit_tipo_conta"
+                        key=f"edit_tipo_conta{e_suffix}"
                     )
                     # Senha opcional
-                    e_senha_conta = st.text_input("Nova Senha da Conta (deixe em branco para não alterar):", type="password", key="edit_senha_conta")
+                    e_senha_conta = st.text_input("Nova Senha da Conta (deixe em branco para não alterar):", type="password", key=f"edit_senha_conta{e_suffix}")
                 with col_e2:
                     # Buscar agências disponíveis
                     list_ag = []
@@ -403,58 +404,59 @@ def render(user):
                             [ag[0] for ag in list_ag],
                             index=idx_ag,
                             format_func=lambda x: next(f"Ag. {ag[0]} - {ag[1]}" for ag in list_ag if ag[0] == x),
-                            key="edit_agencia"
+                            key=f"edit_agencia{e_suffix}"
                         )
                     else:
-                        e_num_ag = st.number_input("Número da Agência:", min_value=1, value=int(c_detalhes['num_ag']), key="edit_agencia_manual")
+                        e_num_ag = st.number_input("Número da Agência:", min_value=1, value=int(c_detalhes['num_ag']), key=f"edit_agencia_manual{e_suffix}")
 
                     # Juros e Limite
                     e_taxa_juros = None
                     e_limite_credito = None
                     if e_tipo_conta == "poupança":
                         val_juros = c_detalhes['taxa_juros'] if c_detalhes['taxa_juros'] is not None else 0.5
-                        e_taxa_juros = st.number_input("Taxa de Juros (% a.m.):", min_value=0.0, max_value=100.0, value=float(val_juros), step=0.1, key="edit_juros")
+                        e_taxa_juros = st.number_input("Taxa de Juros (% a.m.):", min_value=0.0, max_value=100.0, value=float(val_juros), step=0.1, key=f"edit_juros{e_suffix}")
                     elif e_tipo_conta == "conta especial":
                         val_limite = c_detalhes['limite_credito'] if c_detalhes['limite_credito'] is not None else 500.0
-                        e_limite_credito = st.number_input("Limite de Crédito (R$):", min_value=0.0, value=float(val_limite), step=100.0, key="edit_limite")
+                        e_limite_credito = st.number_input("Limite de Crédito (R$):", min_value=0.0, value=float(val_limite), step=100.0, key=f"edit_limite{e_suffix}")
 
                 st.markdown("#### 👤 Alterar Dados do Titular (Cliente)")
                 col_e3, col_e4 = st.columns(2)
                 with col_e3:
-                    e_nome = st.text_input("Nome Completo:", value=cl_detalhes['nome_completo'], key="edit_cli_nome")
-                    e_nasc = st.date_input("Data de Nascimento:", value=cl_detalhes['data_nascimento'], min_value=date(1900, 1, 1), max_value=date.today(), key="edit_cli_nasc")
+                    e_nome = st.text_input("Nome Completo:", value=cl_detalhes['nome_completo'], key=f"edit_cli_nome{e_suffix}")
+                    e_nasc = st.date_input("Data de Nascimento:", value=cl_detalhes['data_nascimento'], min_value=date(1900, 1, 1), max_value=date.today(), key=f"edit_cli_nasc{e_suffix}")
                 with col_e4:
-                    e_rg_num = st.text_input("RG (Número):", value=cl_detalhes['rg_numero'], key="edit_cli_rg")
-                    e_rg_org = st.text_input("Órgão Emissor:", value=cl_detalhes['rg_orgao'], key="edit_cli_rg_org")
+                    e_rg_num = st.text_input("RG (Número):", value=cl_detalhes['rg_numero'], key=f"edit_cli_rg{e_suffix}")
+                    e_rg_org = st.text_input("Órgão Emissor:", value=cl_detalhes['rg_orgao'], key=f"edit_cli_rg_org{e_suffix}")
                     list_uf = ["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"]
-                    e_rg_uf = st.selectbox("UF do RG:", list_uf, index=list_uf.index(cl_detalhes['rg_uf']) if cl_detalhes['rg_uf'] in list_uf else 5, key="edit_cli_rg_uf")
+                    e_rg_uf = st.selectbox("UF do RG:", list_uf, index=list_uf.index(cl_detalhes['rg_uf']) if cl_detalhes['rg_uf'] in list_uf else 5, key=f"edit_cli_rg_uf{e_suffix}")
 
                 st.markdown("##### Endereço do Cliente")
                 col_e5, col_e6, col_e7 = st.columns([1, 2, 1])
                 with col_e5:
-                    e_tipo_log = st.selectbox("Tipo:", ["Rua", "Avenida", "Praça", "Travessa", "Rodovia"], index=["Rua", "Avenida", "Praça", "Travessa", "Rodovia"].index(cl_detalhes['tipo_logradouro']) if cl_detalhes['tipo_logradouro'] in ["Rua", "Avenida", "Praça", "Travessa", "Rodovia"] else 0, key="edit_cli_tipo_log")
-                    e_numero = st.text_input("Número:", value=cl_detalhes['numero'], key="edit_cli_num")
+                    e_tipo_log = st.selectbox("Tipo:", ["Rua", "Avenida", "Praça", "Travessa", "Rodovia"], index=["Rua", "Avenida", "Praça", "Travessa", "Rodovia"].index(cl_detalhes['tipo_logradouro']) if cl_detalhes['tipo_logradouro'] in ["Rua", "Avenida", "Praça", "Travessa", "Rodovia"] else 0, key=f"edit_cli_tipo_log{e_suffix}")
+                    e_numero = st.text_input("Número:", value=cl_detalhes['numero'], key=f"edit_cli_num{e_suffix}")
                 with col_e6:
-                    e_nome_log = st.text_input("Nome do Logradouro:", value=cl_detalhes['nome_logradouro'], key="edit_cli_log_nome")
-                    e_complemento = st.text_input("Complemento:", value=cl_detalhes['complemento'], key="edit_cli_comp")
+                    e_nome_log = st.text_input("Nome do Logradouro:", value=cl_detalhes['nome_logradouro'], key=f"edit_cli_log_nome{e_suffix}")
+                    e_complemento = st.text_input("Complemento:", value=cl_detalhes['complemento'], key=f"edit_cli_comp{e_suffix}")
                 with col_e7:
-                    e_bairro = st.text_input("Bairro:", value=cl_detalhes['bairro'], key="edit_cli_bairro")
-                    e_cep = st.text_input("CEP:", max_chars=8, value=cl_detalhes['cep'], key="edit_cli_cep")
+                    e_bairro = st.text_input("Bairro:", value=cl_detalhes['bairro'], key=f"edit_cli_bairro{e_suffix}")
+                    e_cep = st.text_input("CEP:", max_chars=8, value=cl_detalhes['cep'], key=f"edit_cli_cep{e_suffix}")
 
                 col_e8, col_e9 = st.columns(2)
                 with col_e8:
-                    e_cidade = st.text_input("Cidade:", value=cl_detalhes['cidade'], key="edit_cli_cidade")
+                    e_cidade = st.text_input("Cidade:", value=cl_detalhes['cidade'], key=f"edit_cli_cidade{e_suffix}")
                 with col_e9:
-                    e_estado = st.selectbox("Estado (UF):", list_uf, index=list_uf.index(cl_detalhes['estado']) if cl_detalhes['estado'] in list_uf else 5, key="edit_cli_estado")
+                    e_estado = st.selectbox("Estado (UF):", list_uf, index=list_uf.index(cl_detalhes['estado']) if cl_detalhes['estado'] in list_uf else 5, key=f"edit_cli_estado{e_suffix}")
 
                 st.markdown("##### Contatos do Cliente")
                 col_e10, col_e11 = st.columns(2)
                 with col_e10:
-                    e_email = st.text_input("E-mail:", value=email_atual, key="edit_cli_email")
+                    e_email = st.text_input("E-mail:", value=email_atual, key=f"edit_cli_email{e_suffix}")
                 with col_e11:
-                    e_telefone = st.text_input("Telefone:", value=telefone_atual, key="edit_cli_telefone")
+                    e_telefone = st.text_input("Telefone:", value=telefone_atual, key=f"edit_cli_telefone{e_suffix}")
 
-                if st.button("Salvar Alterações da Conta e Cliente", key="btn_confirmar_edicao_conta"):
+                if st.button("Salvar Alterações da Conta e Cliente", key=f"btn_confirmar_edicao_conta{e_suffix}"):
+
                     if not e_nome or not e_cep or len(e_cep) != 8:
                         st.error("Por favor, preencha os campos obrigatórios (Nome e CEP com 8 dígitos).")
                         return
@@ -584,7 +586,7 @@ def render(user):
                 st.warning("Nenhum funcionário cadastrado para edição.")
                 st.stop()
 
-        suffix = "_edit" if fluxo_func == "Editar Funcionário Existente" else "_cad"
+        suffix = f"_edit_{func_selecionado['matricula']}" if (fluxo_func == "Editar Funcionário Existente" and func_selecionado) else "_cad"
 
         st.markdown("#### Dados Pessoais do Funcionário")
         col_f1, col_f2 = st.columns(2)
